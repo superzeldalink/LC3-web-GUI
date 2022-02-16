@@ -54,7 +54,10 @@ Uint8List toBytes(start, end) {
   return Uint8List.fromList(bytes);
 }
 
-List<String> instructionDetails(String instructionBits, int orig, int current) {
+List<String> instructionDetails(String instructionBits, int orig,
+    [int? currentInst]) {
+  int current = 0;
+  if (currentInst != null) current = currentInst;
   var PC = (orig + current).toRadixString(16);
   var opcode, details = '';
   var hex =
@@ -111,13 +114,14 @@ List<String> instructionDetails(String instructionBits, int orig, int current) {
         }
 
         opcode = 'BR$conditions';
-        var dest =
-            (int.parse(instructionBits.substring(7), radix: 2).toSigned(9) +
-                    orig +
-                    current +
-                    1)
-                .toRadixString(16);
-        details = 'x${dest.toUpperCase()}';
+        var pcOffset =
+            int.parse(instructionBits.substring(7), radix: 2).toSigned(9);
+        if (currentInst != null) {
+          var dest = (pcOffset + orig + current + 1).toRadixString(16);
+          details = 'x${dest.toUpperCase()}';
+        } else {
+          details = '#$pcOffset';
+        }
       }
       break;
 
@@ -126,13 +130,14 @@ List<String> instructionDetails(String instructionBits, int orig, int current) {
         var DR = instructionBits.substring(4, 7);
 
         opcode = 'LD';
-        var dest =
-            (int.parse(instructionBits.substring(7), radix: 2).toSigned(9) +
-                    orig +
-                    current +
-                    1)
-                .toRadixString(16);
-        details = 'R${int.parse(DR, radix: 2)}, x${dest.toUpperCase()}';
+        var pcOffset =
+            int.parse(instructionBits.substring(7), radix: 2).toSigned(9);
+        if (currentInst != null) {
+          var dest = (pcOffset + orig + current + 1).toRadixString(16);
+          details = 'R${int.parse(DR, radix: 2)}, x${dest.toUpperCase()}';
+        } else {
+          details = 'R${int.parse(DR, radix: 2)}, #$pcOffset';
+        }
       }
       break;
     case '1010': // LDI
@@ -140,13 +145,14 @@ List<String> instructionDetails(String instructionBits, int orig, int current) {
         var DR = instructionBits.substring(4, 7);
 
         opcode = 'LDI';
-        var dest =
-            (int.parse(instructionBits.substring(7), radix: 2).toSigned(9) +
-                    orig +
-                    current +
-                    1)
-                .toRadixString(16);
-        details = 'R${int.parse(DR, radix: 2)}, x${dest.toUpperCase()}';
+        var pcOffset =
+            int.parse(instructionBits.substring(7), radix: 2).toSigned(9);
+        if (currentInst != null) {
+          var dest = (pcOffset + orig + current + 1).toRadixString(16);
+          details = 'R${int.parse(DR, radix: 2)}, x${dest.toUpperCase()}';
+        } else {
+          details = 'R${int.parse(DR, radix: 2)}, #$pcOffset';
+        }
       }
       break;
 
@@ -168,13 +174,14 @@ List<String> instructionDetails(String instructionBits, int orig, int current) {
         var DR = instructionBits.substring(4, 7);
 
         opcode = 'LEA';
-        var dest =
-            (int.parse(instructionBits.substring(7), radix: 2).toSigned(9) +
-                    orig +
-                    current +
-                    1)
-                .toRadixString(16);
-        details = 'R${int.parse(DR, radix: 2)}, x${dest.toUpperCase()}';
+        var pcOffset =
+            int.parse(instructionBits.substring(7), radix: 2).toSigned(9);
+        if (currentInst != null) {
+          var dest = (pcOffset + orig + current + 1).toRadixString(16);
+          details = 'R${int.parse(DR, radix: 2)}, x${dest.toUpperCase()}';
+        } else {
+          details = 'R${int.parse(DR, radix: 2)}, #$pcOffset';
+        }
       }
       break;
 
@@ -183,13 +190,14 @@ List<String> instructionDetails(String instructionBits, int orig, int current) {
         var SR = instructionBits.substring(4, 7);
 
         opcode = 'ST';
-        var dest =
-            (int.parse(instructionBits.substring(7), radix: 2).toSigned(9) +
-                    orig +
-                    current +
-                    1)
-                .toRadixString(16);
-        details = 'R${int.parse(SR, radix: 2)}, x${dest.toUpperCase()}';
+        var pcOffset =
+            int.parse(instructionBits.substring(7), radix: 2).toSigned(9);
+        if (currentInst != null) {
+          var dest = (pcOffset + orig + current + 1).toRadixString(16);
+          details = 'R${int.parse(SR, radix: 2)}, x${dest.toUpperCase()}';
+        } else {
+          details = 'R${int.parse(SR, radix: 2)}, #$pcOffset';
+        }
       }
       break;
     case '1011': // STI
@@ -197,13 +205,14 @@ List<String> instructionDetails(String instructionBits, int orig, int current) {
         var SR = instructionBits.substring(4, 7);
 
         opcode = 'STI';
-        var dest =
-            (int.parse(instructionBits.substring(7), radix: 2).toSigned(9) +
-                    orig +
-                    current +
-                    1)
-                .toRadixString(16);
-        details = 'R${int.parse(SR, radix: 2)}, x${dest.toUpperCase()}';
+        var pcOffset =
+            int.parse(instructionBits.substring(7), radix: 2).toSigned(9);
+        if (currentInst != null) {
+          var dest = (pcOffset + orig + current + 1).toRadixString(16);
+          details = 'R${int.parse(SR, radix: 2)}, x${dest.toUpperCase()}';
+        } else {
+          details = 'R${int.parse(SR, radix: 2)}, #$pcOffset';
+        }
       }
       break;
 
@@ -262,7 +271,7 @@ List<String> instructionDetails(String instructionBits, int orig, int current) {
             break;
 
           default:
-            details = traphex.toUpperCase();
+            details = 'x${traphex.toUpperCase().padLeft(2, '0')}';
             break;
         }
       }
@@ -283,8 +292,14 @@ List<String> instructionDetails(String instructionBits, int orig, int current) {
       {
         if (instructionBits[4] == '1') {
           opcode = 'JSR';
-          details =
-              'x${(int.parse(instructionBits.substring(5), radix: 2).toSigned(11) + orig + current + 1).toRadixString(16).toUpperCase()}';
+          var pcOffset =
+              int.parse(instructionBits.substring(5), radix: 2).toSigned(11);
+          if (currentInst != null) {
+            details =
+                'x${(pcOffset + orig + current + 1).toRadixString(16).toUpperCase()}';
+          } else {
+            details = '#$pcOffset';
+          }
         } else {
           var baseR = instructionBits.substring(7, 10);
           opcode = 'JSRR';

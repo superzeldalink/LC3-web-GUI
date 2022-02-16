@@ -30,13 +30,13 @@ class MyApp extends StatelessWidget {
       home: ResponsiveWrapper.builder(
         const MyHomePage(title: 'LC3 (de)Compiler and VM'),
         defaultScaleFactor: 0.7,
-        minWidth: 1060,
+        minWidth: 1102,
         defaultScale: true,
         breakpoints: [
-          const ResponsiveBreakpoint.resize(1060, scaleFactor: 0.7),
-          const ResponsiveBreakpoint.resize(1208, scaleFactor: 0.8),
-          const ResponsiveBreakpoint.resize(1360, scaleFactor: 0.9),
-          const ResponsiveBreakpoint.resize(1550),
+          const ResponsiveBreakpoint.resize(1102, scaleFactor: 0.7),
+          const ResponsiveBreakpoint.resize(1258, scaleFactor: 0.8),
+          const ResponsiveBreakpoint.resize(1416, scaleFactor: 0.9),
+          const ResponsiveBreakpoint.resize(1572),
           // ResponsiveBreakpoint.autoScale(1920, scaleFactor: 1),
         ],
       ),
@@ -99,7 +99,8 @@ class _MyHomePageState extends State<MyHomePage> {
   var compiled = false;
 
   var obj;
-  var start, end = 0;
+  int start = 0x3000;
+  int end = 0;
   bool stepping = false;
   bool haltFound = false;
 
@@ -133,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
             obj[0].toRadixString(16).padLeft(2, '0') +
                 obj[1].toRadixString(16).padLeft(2, '0'),
             radix: 16);
-        end = start + (obj.length / 2) - 1;
+        end = (start + (obj.length / 2) - 1) as int;
 
         read_obj(obj);
         instructions = disassembler.disassembleByMem(start, end);
@@ -616,6 +617,7 @@ class _MyHomePageState extends State<MyHomePage> {
   var addressField = TextEditingController();
   var hexField = TextEditingController();
   var decField = TextEditingController();
+  var binField = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -823,7 +825,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 children: [
                   Expanded(
-                    flex: 7,
+                    flex: 11,
                     child: SingleChildScrollView(
                       scrollDirection: Axis.vertical,
                       child: SingleChildScrollView(
@@ -837,8 +839,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   Expanded(
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        const Text(
+                          'Address value:',
+                          style: TextStyle(
+                            fontFamily: 'Consolas',
+                            fontSize: 20,
+                          ),
+                        ),
                         SizedBox(
                           width: 75,
                           child: TextField(
@@ -904,7 +913,56 @@ class _MyHomePageState extends State<MyHomePage> {
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        const VerticalDivider(),
+                        SizedBox(
+                          width: 60,
+                          child: Text(
+                            (addressField.text != '')
+                                ? disassembler.instructionDetails(
+                                    mem_read(int.parse(addressField.text,
+                                            radix: 16))
+                                        .toRadixString(2)
+                                        .padLeft(16, '0'),
+                                    start,
+                                    register[RegisterAddress.R_PC]! - start)[3]
+                                : '',
+                            style: const TextStyle(
+                              fontFamily: 'Consolas',
+                              fontSize: 20,
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 150,
+                          child: Text(
+                            (addressField.text != '')
+                                ? disassembler.instructionDetails(
+                                    mem_read(int.parse(addressField.text,
+                                            radix: 16))
+                                        .toRadixString(2)
+                                        .padLeft(16, '0'),
+                                    start,
+                                    register[RegisterAddress.R_PC]! - start)[4]
+                                : '',
+                            style: const TextStyle(
+                              fontFamily: 'Consolas',
+                              fontSize: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Converter:  ',
+                          style: TextStyle(
+                            fontFamily: 'Consolas',
+                            fontSize: 20,
+                          ),
+                        ),
                         SizedBox(
                           width: 75,
                           child: TextField(
@@ -926,17 +984,17 @@ class _MyHomePageState extends State<MyHomePage> {
                             onChanged: (value) => setState(() {
                               if (value == '') {
                                 decField.text = '';
+                                binField.text = '';
                               } else {
                                 decField.text = int.parse(value, radix: 16)
                                     .toSigned(16)
                                     .toString();
+                                binField.text = int.parse(value, radix: 16)
+                                    .toRadixString(2)
+                                    .padLeft(16, '0');
                               }
                             }),
                           ),
-                        ),
-                        const Text(
-                          '<->',
-                          style: TextStyle(fontSize: 20.0),
                         ),
                         SizedBox(
                           width: 75,
@@ -958,24 +1016,92 @@ class _MyHomePageState extends State<MyHomePage> {
                             onChanged: (value) => setState(() {
                               if (value == '' || value == '-') {
                                 hexField.text = '';
+                                binField.text = '';
                               } else if (int.parse(value) > 32767) {
                                 decField.text = '32767';
                                 hexField.text = '7FFF';
+                                binField.text = '0111111111111111';
                               } else if (int.parse(value) < -32768) {
                                 decField.text = '-32768';
                                 hexField.text = '8000';
+                                binField.text = '1000000000000000';
                               } else {
                                 hexField.text = int.parse(value)
                                     .toUnsigned(16)
                                     .toRadixString(16)
                                     .toUpperCase()
                                     .padLeft(4, '0');
+                                binField.text = int.parse(value, radix: 16)
+                                    .toRadixString(2)
+                                    .padLeft(16, '0');
                               }
                             }),
                           ),
                         ),
+                        SizedBox(
+                          width: 200,
+                          child: TextField(
+                            textAlign: TextAlign.center,
+                            maxLength: 16,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                  RegExp(r'[0-1]')),
+                            ],
+                            controller: binField,
+                            style: const TextStyle(
+                              fontFamily: 'Consolas',
+                              fontSize: 20,
+                            ),
+                            decoration: const InputDecoration(
+                              counterText: '',
+                              hintText: 'Bin',
+                            ),
+                            onChanged: (value) => setState(() {
+                              if (value == '') {
+                                decField.text = '';
+                                hexField.text = '';
+                              } else {
+                                decField.text = int.parse(value, radix: 2)
+                                    .toSigned(16)
+                                    .toString();
+                                hexField.text = int.parse(value, radix: 2)
+                                    .toRadixString(16)
+                                    .padLeft(4, '0');
+                              }
+                            }),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 60,
+                          child: Text(
+                            (binField.text.length < 16)
+                                ? ''
+                                : disassembler.instructionDetails(
+                                    binField.text, start)[3],
+                            style: const TextStyle(
+                              fontFamily: 'Consolas',
+                              fontSize: 20,
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 150,
+                          child: Text(
+                            (binField.text.length < 16)
+                                ? ''
+                                : disassembler.instructionDetails(
+                                    binField.text, start)[4],
+                            style: const TextStyle(
+                              fontFamily: 'Consolas',
+                              fontSize: 20,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
+                  ),
+                  SizedBox(
+                    height: 8,
                   ),
                   Row(
                     mainAxisSize: MainAxisSize.max,
@@ -1041,12 +1167,12 @@ class _MyHomePageState extends State<MyHomePage> {
                                         break;
                                       default:
                                         codeFieldController.text +=
-                                            '.FILL #${int.parse(instructions[i][2], radix: 16)} ; .FILL #${instructions[i][2]}';
+                                            '.FILL #${int.parse(instructions[i][2], radix: 16)} ; .FILL x${instructions[i][2]}';
                                         break;
                                     }
                                   } else if (opcode == 'NOP') {
                                     codeFieldController.text +=
-                                        '.FILL #${int.parse(instructions[i][2], radix: 16)} ; .FILL #${instructions[i][2]}';
+                                        '.FILL #${int.parse(instructions[i][2], radix: 16)} ; .FILL x${instructions[i][2]}';
                                   } else if (opcode == 'JSR') {
                                     var PCoffset = int.parse(
                                             detail.substring(1),
@@ -1152,7 +1278,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   obj[0].toRadixString(16).padLeft(2, '0') +
                                       obj[1].toRadixString(16).padLeft(2, '0'),
                                   radix: 16);
-                              end = start + (obj.length / 2) - 1;
+                              end = (start + (obj.length / 2) - 1) as int;
 
                               read_obj(obj);
                               instructions =
@@ -1200,7 +1326,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                   Expanded(
-                    flex: 3,
+                    flex: 5,
                     child: Row(
                       children: [
                         Expanded(
