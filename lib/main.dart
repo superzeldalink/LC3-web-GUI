@@ -1031,7 +1031,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     .toRadixString(16)
                                     .toUpperCase()
                                     .padLeft(4, '0');
-                                binField.text = int.parse(value, radix: 16)
+                                binField.text = int.parse(value)
                                     .toRadixString(2)
                                     .padLeft(16, '0');
                               }
