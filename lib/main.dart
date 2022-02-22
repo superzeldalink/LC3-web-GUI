@@ -1300,7 +1300,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                             counterText: '',
                                             hintText: 'Start address',
                                           ),
-                                          onChanged: (value) => setState(() {}),
+                                          onChanged: (value) =>
+                                              setDialogState(() {}),
                                         ),
                                         TextField(
                                           maxLength: 4,
