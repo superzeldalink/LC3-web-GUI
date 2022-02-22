@@ -101,10 +101,16 @@ class _MyHomePageState extends State<MyHomePage> {
   var obj;
   int start = 0x3000;
   int end = 0;
+
+  int newStart = 0x3000;
+  int newEnd = 0x300F;
+
   bool stepping = false;
   bool haltFound = false;
 
   var countInst;
+
+  bool nopEnabled = false;
 
   void compile() {
     setState(() {
@@ -137,7 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
         end = (start + (obj.length / 2) - 1) as int;
 
         read_obj(obj);
-        instructions = disassembler.disassembleByMem(start, end);
+        instructions = disassembler.disassembleByMem(start, end, true);
 
         countInst = List.filled(instructions.length, 0);
 
@@ -762,7 +768,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         width: 16.0,
                       ),
                       ElevatedButton(
-                        // Download .obj Button
+                        // Download .asm Button
                         onPressed: () =>
                             FlutterClipboard.copy(codeFieldController.rawText),
                         child: Row(
@@ -1262,6 +1268,112 @@ class _MyHomePageState extends State<MyHomePage> {
                       const SizedBox(
                         width: 16.0,
                       ),
+                      ElevatedButton(
+                        // Range Button
+                        onPressed: () {
+                          var startController = TextEditingController(
+                              text: newStart.toRadixString(16));
+                          var endController = TextEditingController(
+                              text: newEnd.toRadixString(16));
+                          showDialog<void>(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return StatefulBuilder(
+                                  builder: (context, setDialogState) {
+                                return AlertDialog(
+                                  title: Text('Change address range'),
+                                  content: SingleChildScrollView(
+                                    child: Column(
+                                      children: [
+                                        TextField(
+                                          maxLength: 4,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.allow(
+                                                RegExp(r'[0-9A-Za-z]')),
+                                          ],
+                                          controller: startController,
+                                          style: const TextStyle(
+                                            fontFamily: 'Consolas',
+                                            fontSize: 20,
+                                          ),
+                                          decoration: const InputDecoration(
+                                            counterText: '',
+                                            hintText: 'Start address',
+                                          ),
+                                          onChanged: (value) => setState(() {}),
+                                        ),
+                                        TextField(
+                                          maxLength: 4,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.allow(
+                                                RegExp(r'[0-9A-Za-z]')),
+                                          ],
+                                          controller: endController,
+                                          style: const TextStyle(
+                                            fontFamily: 'Consolas',
+                                            fontSize: 20,
+                                          ),
+                                          decoration: const InputDecoration(
+                                            counterText: '',
+                                            hintText: 'End address',
+                                          ),
+                                          onChanged: (value) => setState(() {}),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      child: const Text('OK'),
+                                      onPressed: () {
+                                        setState(() {
+                                          newStart = int.parse(
+                                              startController.text,
+                                              radix: 16);
+                                          newEnd = int.parse(endController.text,
+                                              radix: 16);
+                                        });
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ],
+                                );
+                              });
+                            },
+                          );
+                        },
+                        child: Row(
+                          children: const [
+                            Icon(Icons.change_circle),
+                            Text(
+                              'Range',
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 16.0,
+                      ),
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: nopEnabled,
+                            onChanged: (value) {
+                              setState(() {
+                                nopEnabled = value!;
+                                if (value == true) {
+                                  instructions = disassembler.disassembleByMem(
+                                      newStart, newEnd, true);
+                                } else {
+                                  instructions = disassembler.disassembleByMem(
+                                      newStart, newEnd, false);
+                                }
+                              });
+                            },
+                          ),
+                          const Text('Show NOP'),
+                        ],
+                      ),
                       const Spacer(),
                       ElevatedButton(
                         // Open .obj Button
@@ -1281,8 +1393,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               end = (start + (obj.length / 2) - 1) as int;
 
                               read_obj(obj);
-                              instructions =
-                                  disassembler.disassembleByMem(start, end);
+                              instructions = disassembler.disassembleByMem(
+                                  start, end, true);
                               fileNameController.text = fileName.split('.')[0];
                             });
                           } else {}

@@ -22,7 +22,7 @@ List disassembleByObj(obj) {
   return instructions;
 }
 
-List disassembleByMem(start, end) {
+List disassembleByMem(start, end, nop) {
   var instructionsBits = <String>[];
   var instructions = List.empty(growable: true);
 
@@ -30,7 +30,13 @@ List disassembleByMem(start, end) {
     instructionsBits.add(mem_read(i).toRadixString(2).padLeft(16, '0'));
   }
   for (var i = 0; i < instructionsBits.length; i++) {
-    instructions.add(instructionDetails(instructionsBits[i], start, i));
+    if (nop == true) {
+      instructions.add(instructionDetails(instructionsBits[i], start, i));
+    } else {
+      if (instructionsBits[i] != '0000000000000000') {
+        instructions.add(instructionDetails(instructionsBits[i], start, i));
+      }
+    }
   }
 
   return instructions;
