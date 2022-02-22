@@ -1319,6 +1319,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                             counterText: '',
                                             hintText: 'End address',
                                           ),
+                                          onChanged: (value) =>
+                                              setDialogState(() {}),
                                         ),
                                       ],
                                     ),
@@ -1326,13 +1328,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                   actions: <Widget>[
                                     TextButton(
                                       child: const Text('OK'),
-                                      onPressed: (startController.text != '' ||
-                                              endController.text != '' ||
+                                      onPressed: (startController.text == '' ||
+                                              endController.text == '' ||
                                               int.parse(startController.text,
-                                                      radix: 16) <
+                                                      radix: 16) >=
                                                   int.parse(endController.text,
                                                       radix: 16))
-                                          ? () {
+                                          ? null
+                                          : () {
                                               setState(() {
                                                 start = int.parse(
                                                     startController.text,
@@ -1345,8 +1348,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                                         start, end, nopEnabled);
                                               });
                                               Navigator.of(context).pop();
-                                            }
-                                          : null,
+                                            },
                                     ),
                                   ],
                                 );
