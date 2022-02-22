@@ -1271,16 +1271,16 @@ class _MyHomePageState extends State<MyHomePage> {
                         // Range Button
                         onPressed: () {
                           var startController = TextEditingController(
-                              text: start.toRadixString(16));
+                              text: start.toRadixString(16).toUpperCase());
                           var endController = TextEditingController(
-                              text: end.toRadixString(16));
+                              text: end.toRadixString(16).toUpperCase());
                           showDialog<void>(
                             context: context,
                             builder: (BuildContext context) {
                               return StatefulBuilder(
                                   builder: (context, setDialogState) {
                                 return AlertDialog(
-                                  title: Text('Change address range'),
+                                  title: const Text('Change address range'),
                                   content: SingleChildScrollView(
                                     child: Column(
                                       children: [
@@ -1296,6 +1296,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                             fontSize: 20,
                                           ),
                                           decoration: const InputDecoration(
+                                            border: UnderlineInputBorder(),
                                             counterText: '',
                                             hintText: 'Start address',
                                           ),
@@ -1313,14 +1314,10 @@ class _MyHomePageState extends State<MyHomePage> {
                                             fontSize: 20,
                                           ),
                                           decoration: const InputDecoration(
+                                            border: UnderlineInputBorder(),
                                             counterText: '',
                                             hintText: 'End address',
                                           ),
-                                          onChanged: (value) => setState(() {
-                                            instructions =
-                                                disassembler.disassembleByMem(
-                                                    start, end, nopEnabled);
-                                          }),
                                         ),
                                       ],
                                     ),
@@ -1328,19 +1325,27 @@ class _MyHomePageState extends State<MyHomePage> {
                                   actions: <Widget>[
                                     TextButton(
                                       child: const Text('OK'),
-                                      onPressed: () {
-                                        setState(() {
-                                          start = int.parse(
-                                              startController.text,
-                                              radix: 16);
-                                          end = int.parse(endController.text,
-                                              radix: 16);
-                                          instructions =
-                                              disassembler.disassembleByMem(
-                                                  start, end, nopEnabled);
-                                        });
-                                        Navigator.of(context).pop();
-                                      },
+                                      onPressed: (startController.text != '' ||
+                                              endController.text != '' ||
+                                              int.parse(startController.text,
+                                                      radix: 16) <
+                                                  int.parse(endController.text,
+                                                      radix: 16))
+                                          ? () {
+                                              setState(() {
+                                                start = int.parse(
+                                                    startController.text,
+                                                    radix: 16);
+                                                end = int.parse(
+                                                    endController.text,
+                                                    radix: 16);
+                                                instructions = disassembler
+                                                    .disassembleByMem(
+                                                        start, end, nopEnabled);
+                                              });
+                                              Navigator.of(context).pop();
+                                            }
+                                          : null,
                                     ),
                                   ],
                                 );
