@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:html' as html;
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:clipboard/clipboard.dart';
 import 'package:code_text_field/code_text_field.dart';
@@ -75,6 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
+    instructions = disassembler.disassembleByMem(start, end, nopEnabled);
     initMachine();
     super.initState();
   }
@@ -100,17 +102,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   var obj;
   int start = 0x3000;
-  int end = 0;
-
-  int newStart = 0x3000;
-  int newEnd = 0x300F;
+  int end = 0x300F;
 
   bool stepping = false;
   bool haltFound = false;
 
   var countInst;
 
-  bool nopEnabled = false;
+  bool nopEnabled = true;
 
   void compile() {
     setState(() {
@@ -143,7 +142,7 @@ class _MyHomePageState extends State<MyHomePage> {
         end = (start + (obj.length / 2) - 1) as int;
 
         read_obj(obj);
-        instructions = disassembler.disassembleByMem(start, end, true);
+        instructions = disassembler.disassembleByMem(start, end, nopEnabled);
 
         countInst = List.filled(instructions.length, 0);
 
@@ -1272,9 +1271,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         // Range Button
                         onPressed: () {
                           var startController = TextEditingController(
-                              text: newStart.toRadixString(16));
+                              text: start.toRadixString(16));
                           var endController = TextEditingController(
-                              text: newEnd.toRadixString(16));
+                              text: end.toRadixString(16));
                           showDialog<void>(
                             context: context,
                             builder: (BuildContext context) {
@@ -1317,7 +1316,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                             counterText: '',
                                             hintText: 'End address',
                                           ),
-                                          onChanged: (value) => setState(() {}),
+                                          onChanged: (value) => setState(() {
+                                            instructions =
+                                                disassembler.disassembleByMem(
+                                                    start, end, nopEnabled);
+                                          }),
                                         ),
                                       ],
                                     ),
@@ -1327,11 +1330,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                       child: const Text('OK'),
                                       onPressed: () {
                                         setState(() {
-                                          newStart = int.parse(
+                                          start = int.parse(
                                               startController.text,
                                               radix: 16);
-                                          newEnd = int.parse(endController.text,
+                                          end = int.parse(endController.text,
                                               radix: 16);
+                                          instructions =
+                                              disassembler.disassembleByMem(
+                                                  start, end, nopEnabled);
                                         });
                                         Navigator.of(context).pop();
                                       },
@@ -1361,17 +1367,12 @@ class _MyHomePageState extends State<MyHomePage> {
                             onChanged: (value) {
                               setState(() {
                                 nopEnabled = value!;
-                                if (value == true) {
-                                  instructions = disassembler.disassembleByMem(
-                                      newStart, newEnd, true);
-                                } else {
-                                  instructions = disassembler.disassembleByMem(
-                                      newStart, newEnd, false);
-                                }
+                                instructions = disassembler.disassembleByMem(
+                                    start, end, value);
                               });
                             },
                           ),
-                          const Text('Show NOP'),
+                          const Text('Show x0000'),
                         ],
                       ),
                       const Spacer(),
@@ -1394,7 +1395,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                               read_obj(obj);
                               instructions = disassembler.disassembleByMem(
-                                  start, end, true);
+                                  start, end, nopEnabled);
                               fileNameController.text = fileName.split('.')[0];
                             });
                           } else {}
