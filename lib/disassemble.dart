@@ -314,15 +314,21 @@ List<String> instructionDetails(String instructionBits, int orig,
       }
       break;
 
-    case '1000': // JSR, JSRR
+    case '1000': // RTI
       {
         opcode = 'RTI';
       }
       break;
 
     default:
-      opcode = 'NOP';
+      {
+        opcode = 'NOP';
+      }
       break;
+  }
+  if (opcode == 'NOP') {
+    var data = int.parse(instructionBits, radix: 2);
+    details = '#$data, ${String.fromCharCode(data)}';
   }
   // print('x$PC $instructionBits x$hex $opcode $details');
   return [

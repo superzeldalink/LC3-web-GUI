@@ -339,8 +339,7 @@ void step(consoleController, inputController) {
               var char = mem_read(offset++) & 0x7F;
 
               while (char != 0x0000) {
-                insertText(
-                    (String.fromCharCode(char)) + '\n', consoleController);
+                insertText((String.fromCharCode(char)), consoleController);
                 char = mem_read(offset++) & 0x7F;
               }
             }
