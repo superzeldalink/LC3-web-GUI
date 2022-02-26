@@ -108,6 +108,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool haltFound = false;
 
   var countInst;
+  int keyPressed = 0;
 
   bool nopEnabled = true;
 
@@ -139,6 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
             obj[0].toRadixString(16).padLeft(2, '0') +
                 obj[1].toRadixString(16).padLeft(2, '0'),
             radix: 16);
+
         end = (start + (obj.length / 2) - 1) as int;
 
         read_obj(obj);
@@ -151,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void stepNext() {
+  void stepNext() async {
     setState(() {
       if (obj == null) read_obj(obj);
       var pc = register[RegisterAddress.R_PC]!;
@@ -174,15 +176,77 @@ class _MyHomePageState extends State<MyHomePage> {
         logController.text += 'Error: Infinite loop encountered!\n';
       }
 
-      step(consoleController, inputController);
+      step(consoleController, keyPressed);
+
       if (nextOp == Opcode.OP_TRAP) {
         if (nextTrap == Trap.TRAP_IN) {
-          insertText('Enter a character: ', consoleController);
+          insertText('Input a character>', consoleController);
           isRunning = false;
         } else if (nextTrap == Trap.TRAP_GETC) {
           isRunning = false;
         }
       }
+
+      instructions = disassembler.disassembleByMem(start, end, nopEnabled);
+    });
+  }
+
+  void inputChar() async {
+    final FocusNode _focusNode = FocusNode();
+    String? _message;
+
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Input a character'),
+            content: RawKeyboardListener(
+              focusNode: _focusNode,
+              onKey: (event) async {
+                setDialogState(() {
+                  var pressed = event.logicalKey;
+                  keyPressed = pressed.keyId;
+                  if (event.logicalKey.keyId > 255) {
+                    if (pressed == LogicalKeyboardKey.enter)
+                      keyPressed = 0x0A;
+                    else if (pressed == LogicalKeyboardKey.tab)
+                      keyPressed = 0x09;
+                    else if (pressed == LogicalKeyboardKey.backspace)
+                      keyPressed = 0x08;
+                    else if (pressed == LogicalKeyboardKey.escape)
+                      keyPressed = 0x1B;
+                    else {
+                      _message =
+                          'This key is not in ASCII table. Please input another key.';
+                      return;
+                    }
+                  }
+                  _message =
+                      'You pressed x${keyPressed.toRadixString(16).padLeft(2, '0').toUpperCase()}, #$keyPressed';
+
+                  isRunning = true;
+
+                  Navigator.of(context).pop();
+                });
+              },
+              child: AnimatedBuilder(
+                animation: _focusNode,
+                builder: (BuildContext context, Widget? child) {
+                  if (!_focusNode.hasFocus) {
+                    FocusScope.of(context).requestFocus(_focusNode);
+                  }
+                  return Text(_message ?? 'Press a key');
+                },
+              ),
+            ),
+          );
+        });
+      },
+    ).whenComplete(() {
+      Future.delayed(const Duration(milliseconds: 250), () {
+        stepping ? stepNext() : run();
+      });
     });
   }
 
@@ -1454,10 +1518,11 @@ class _MyHomePageState extends State<MyHomePage> {
                         Expanded(
                           flex: 10,
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Expanded(
                                 // Console
-                                flex: 2,
+                                flex: 5,
                                 child: Padding(
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 8.0),
@@ -1482,43 +1547,9 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                               Expanded(
                                 flex: 1,
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 8,
-                                      child: TextField(
-                                        maxLength: 1,
-                                        controller: inputController,
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: TextButton(
-                                        onPressed: () {
-                                          if (TrapConverter.from(mem_read(
-                                                          register[
-                                                              RegisterAddress
-                                                                  .R_PC]!) &
-                                                      0xFF) ==
-                                                  Trap.TRAP_IN ||
-                                              TrapConverter.from(mem_read(
-                                                          register[
-                                                              RegisterAddress
-                                                                  .R_PC]!) &
-                                                      0xFF) ==
-                                                  Trap.TRAP_GETC) {
-                                            isRunning = true;
-                                            stepping ? stepNext() : run();
-                                          }
-
-                                          inputController.text = '';
-                                        },
-                                        child: const Text(
-                                          'Send',
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                child: TextButton(
+                                  child: const Text('Input'),
+                                  onPressed: inputChar,
                                 ),
                               ),
                             ],

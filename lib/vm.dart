@@ -142,7 +142,7 @@ void insertText(String insert, TextEditingController controller) {
 //   }
 // }
 
-void step(consoleController, inputController) {
+void step(consoleController, keyPressed) {
   var pc = register[RegisterAddress.R_PC]!;
   register[RegisterAddress.R_PC] = pc + 1;
   var instr = mem_read(pc);
@@ -321,9 +321,8 @@ void step(consoleController, inputController) {
         switch (trap) {
           case Trap.TRAP_GETC:
             {
-              var char = inputController.text[0];
               insertText('\n', consoleController);
-              register[RegisterAddress.R_R0] = char![0].codeUnitAt(0);
+              register[RegisterAddress.R_R0] = keyPressed;
             }
             break;
           case Trap.TRAP_OUT:
@@ -346,9 +345,9 @@ void step(consoleController, inputController) {
             break;
           case Trap.TRAP_IN:
             {
-              var char = inputController.text[0];
-              insertText('$char\n', consoleController);
-              register[RegisterAddress.R_R0] = char![0].codeUnitAt(0);
+              insertText(
+                  '${String.fromCharCode(keyPressed)}\n', consoleController);
+              register[RegisterAddress.R_R0] = keyPressed;
             }
             break;
           case Trap.TRAP_PUTSP:
