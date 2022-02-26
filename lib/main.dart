@@ -178,11 +178,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
       step(consoleController, keyPressed);
 
-      if (nextOp == Opcode.OP_TRAP) {
-        if (nextTrap == Trap.TRAP_IN) {
+      pc = register[RegisterAddress.R_PC]!;
+      instr = mem_read(pc);
+      countInst[pc - start]++;
+      op = Opcode.values[instr >> 12];
+      trap = TrapConverter.from(instr & 0xFF);
+
+      if (op == Opcode.OP_TRAP) {
+        if (trap == Trap.TRAP_IN) {
           insertText('Input a character>', consoleController);
           isRunning = false;
-        } else if (nextTrap == Trap.TRAP_GETC) {
+        } else if (trap == Trap.TRAP_GETC) {
           isRunning = false;
         }
       }

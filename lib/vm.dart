@@ -321,7 +321,6 @@ void step(consoleController, keyPressed) {
         switch (trap) {
           case Trap.TRAP_GETC:
             {
-              insertText('\n', consoleController);
               register[RegisterAddress.R_R0] = keyPressed;
             }
             break;
